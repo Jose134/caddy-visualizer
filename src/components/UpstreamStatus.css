@@ -1,0 +1,37 @@
+.status {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-weight: 500;
+  min-width: 60px;
+  text-align: center;
+}
+
+.status.up {
+  background: #1b4332;
+  color: #40c463;
+}
+
+.status.down {
+  background: #3c1f1f;
+  color: #f85149;
+}
+
+.status.checking {
+  background: #2d2d1f;
+  color: #d4a72c;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+} 

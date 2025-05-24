@@ -1,0 +1,123 @@
+.proxy-server {
+  margin: 20px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.server-header {
+  padding: 20px;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.server-header h2 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.server-ports {
+  margin-top: 8px;
+  color: var(--text-secondary);
+  font-size: 0.9em;
+}
+
+.proxy-table {
+  width: 100%;
+  min-width: 60vw;
+  border-collapse: collapse;
+}
+
+.proxy-table th,
+.proxy-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.proxy-table th {
+  background: var(--bg-tertiary);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.proxy-table tr:hover {
+  background: var(--bg-tertiary);
+}
+
+.status {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
+.status.active {
+  background: #1b4332;
+  color: #40c463;
+}
+
+.status.inactive {
+  background: #3c1f1f;
+  color: #f85149;
+}
+
+.rules {
+  display: flex;
+  gap: 8px;
+}
+
+.rule {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-weight: 500;
+}
+
+.rule.ip-restriction {
+  background: #1f1f3c;
+  color: #a5a6f6;
+}
+
+.rule.static-response {
+  background: #3d2e08;
+  color: #d4a72c;
+}
+
+.edit-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.edit-btn:hover {
+  background: var(--bg-primary);
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+} 
+
+.search-input-container {
+  padding: 0!important;
+}
+
+.search-input {
+    margin: 0;
+    width: 100%;
+    padding: 10px;
+    border-radius: 0;
+    border: none;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
