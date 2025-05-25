@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import './App.css'
 import ProxyTable from './components/ProxyTable';
 import { flattenCaddyConfig } from './utils/configParser';
@@ -22,30 +22,32 @@ function App() {
   const [servers, setServers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const loadData = useCallback(async () => {
+    try {
+      const result = await fetchCaddyConfig();
+      setServers(flattenCaddyConfig(result));
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Failed to load config:', error);
+      setIsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     let mounted = true;
 
-    const loadData = async () => {
-      try {
-        const result = await fetchCaddyConfig();
-        if (mounted) {
-          setServers(flattenCaddyConfig(result));
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error('Failed to load config:', error);
-        if (mounted) {
-          setIsLoading(false);
-        }
+    const init = async () => {
+      if (mounted) {
+        await loadData();
       }
     };
 
-    loadData();
+    init();
 
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [loadData]);
 
   if (isLoading) {
     return <div className="loading">Loading...</div>;
@@ -55,7 +57,11 @@ function App() {
     <div className="app">
       <main>
         {servers.map(server => (
-          <ProxyTable key={server.name} serverInfo={server} />
+          <ProxyTable 
+            key={server.name} 
+            serverInfo={server} 
+            onRefresh={loadData}
+          />
         ))}
       </main>
     </div>

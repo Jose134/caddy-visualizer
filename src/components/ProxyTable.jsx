@@ -4,14 +4,17 @@ import UpstreamStatus from './UpstreamStatus';
 import { LightAsync as SyntaxHighlighter} from 'react-syntax-highlighter';
 import { tomorrowNight } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
-function ProxyTable({ serverInfo }) {
+function ProxyTable({ serverInfo, onRefresh }) {
   const [search, setSearch] = useState('');
   const [expandedRows, setExpandedRows] = useState(new Set());
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const filteredRoutes = serverInfo.routes.filter(route => 
     route.hostnames.some(hostname => 
       hostname.toLowerCase().includes(search.toLowerCase())
-    ) || route.target.toLowerCase().includes(search.toLowerCase())
+    ) || route.upstreams.some(upstream => 
+      upstream.target.toLowerCase().includes(search.toLowerCase())
+    )
   );
 
   const toggleRow = (routeId) => {
@@ -24,21 +27,67 @@ function ProxyTable({ serverInfo }) {
     setExpandedRows(newExpandedRows);
   };
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await onRefresh();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const renderUpstreamCell = (upstream) => {
+    return (
+      <div className="upstream-entry" key={`${upstream.type}-${upstream.target}`}>
+        <div className="upstream-type">
+          <span className={`upstream-badge ${upstream.type}`}>
+            {upstream.type.toUpperCase()}
+          </span>
+        </div>
+        <div className="monospace">
+          {upstream.target}
+        </div>
+      </div>
+    );
+  };
+
+  const renderIPMatcherCell = (upstream) => 
+    upstream.ipMatcher
+      ? <span className="monospace">
+          {upstream.ipMatcher.not ? <strong>NOT </strong> : ''}
+          {upstream.ipMatcher.ranges.join(', ')}
+        </span>
+      : <span className="monospace">&mdash;</span>;
+
+  const renderStatusCell = (upstream) =>
+    upstream.type === 'proxy'
+      ? <UpstreamStatus target={upstream.target} />
+      : <span className="status static">Static</span>;
+
   return (
     <div className="proxy-server">
       <div className="server-header">
-        <h2>{serverInfo.name}</h2>
-        <div className="server-ports">
-          Listening on: {serverInfo.ports.join(', ')}
+        <div className="server-header-content">
+          <h2>{serverInfo.name}</h2>
+          <div className="server-ports">
+            Listening on: {serverInfo.ports.join(', ')}
+          </div>
         </div>
+        <button 
+          className={`refresh-button ${isRefreshing ? 'refreshing' : ''}`}
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+        >
+          <img src="/refresh.svg" alt="Refresh"/>
+        </button>
       </div>
 
       <table className="proxy-table">
         <thead>
           <tr>
             <th>Domains</th>
-            <th>Upstream Target</th>
-            <th>Special Rules</th>
+            <th>Upstream Targets</th>
+            <th>IP Matchers</th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
@@ -49,29 +98,26 @@ function ProxyTable({ serverInfo }) {
           </tr>
         </thead>
         <tbody>
-          {serverInfo.routes.map(route => (
-            // Using React.Fragment to group the main row and json row
+          {filteredRoutes.map(route => (
             <Fragment key={route.id}>
-              {/* Main row */}
-              <tr style={{display: filteredRoutes.includes(route) ? 'table-row' : 'none'}}>
+              <tr>
                 <td>{route.hostnames.map(hostname => <div key={hostname}>{hostname}</div>)}</td>
-                <td>{route.target || '(static response)'}</td>
-                <td>
-                  <div className="rules">
-                    {route.hasIPRestriction && (
-                      <span className="rule ip-restriction" title="IP Restriction Applied">
-                        IP
-                      </span>
-                    )}
-                    {route.isStaticResponse && (
-                      <span className="rule static-response" title="Static Response">
-                        Static
-                      </span>
-                    )}
-                  </div>
+                <td className="upstreams-cell">
+                  {route.upstreams.map(renderUpstreamCell)}
                 </td>
-                <td>
-                  <UpstreamStatus target={route.target} />
+                <td className="ip-matchers-cell">
+                  {route.upstreams.map((upstream, idx) => (
+                    <div key={idx} className="ip-matcher-entry">
+                      {renderIPMatcherCell(upstream)}
+                    </div>
+                  ))}
+                </td>
+                <td className="status-cell">
+                  {route.upstreams.map((upstream, idx) => (
+                    <div key={idx} className="status-entry">
+                      {renderStatusCell(upstream)}
+                    </div>
+                  ))}
                 </td>
                 <td>
                   <button 
@@ -82,8 +128,7 @@ function ProxyTable({ serverInfo }) {
                   </button>
                 </td>
               </tr>
-              {/* JSON row */}
-              {expandedRows.has(route.id) && filteredRoutes.includes(route) && (
+              {expandedRows.has(route.id) && (
                 <tr className="json-row">
                   <td colSpan={5}>
                     <SyntaxHighlighter language="json" style={tomorrowNight}>
